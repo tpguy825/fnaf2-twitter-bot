@@ -1,0 +1,6 @@
+# Netscape HTTP Cookie File
+
+# Use a cookie exporting extension to get real data for this
+# Use "all domains" if that's an option
+
+.x.com	TRUE	/	TRUE	1799015736.834	auth_token	0123456789abcdef
