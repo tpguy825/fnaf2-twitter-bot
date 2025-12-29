@@ -112,4 +112,4 @@ You can optionally add `-ss <time>` to remove any blank time at the start (e.g. 
 
 1. Change src/index.ts:30 to have the correct total frames
 2. Customise tweet message at src/index.ts:42
-3. If not using ./frames, set frame location in src/index.ts:49
+3. If not using ./frames, set frame location in src/index.ts:48

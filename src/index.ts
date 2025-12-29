@@ -27,7 +27,7 @@ if (import.meta.dirname)
 
 		quit = cleanup;
 
-		const totalFrames = 31199;
+		const totalFrames = 31193;
 
 		await delay(2500);
 		console.log("Starting to log in");
@@ -45,8 +45,10 @@ if (import.meta.dirname)
 			// await mastodon.post(text, path);
 		};
 
+		const base_frames_path = `${process.cwd()}/frames/`;
+
 		async function getPath(i: number) {
-			const filepath = join(process.cwd(), "/frames/", String(i).padStart(4, "0") + ".jpg");
+			const filepath = join(base_frames_path, String(i).padStart(4, "0") + ".jpg");
 			if (fs.existsSync(filepath)) {
 				return filepath;
 			}
