@@ -2,8 +2,10 @@
 import * as fs from "fs";
 import { join } from "path";
 import { reportError } from "./hidden.js";
-import { TwitterProvider } from "./providers/twitter.js";
 import { get, increment, initDB } from "./utils.js";
+import { TwitterProvider } from "./providers/twitter.js";
+import { MastodonProvider } from "./providers/mastodon.js";
+import { BlueskyProvider } from "./providers/bluesky.js";
 
 export const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
@@ -13,8 +15,8 @@ function round(num: number, dp: number) {
 }
 
 const twitter = new TwitterProvider();
-// const mastodon = new MastodonProvider();
-// const bsky = new BlueskyProvider();
+const mastodon = new MastodonProvider();
+const bsky = new BlueskyProvider();
 
 let quit: (reason: string) => void = () => process.exit();
 
@@ -22,8 +24,8 @@ if (import.meta.dirname)
 	(async () => {
 		await initDB();
 		await twitter.init();
-		// await mastodon.init();
-		// await bsky.init();
+		await mastodon.init();
+		await bsky.init();
 
 		quit = cleanup;
 
@@ -32,7 +34,7 @@ if (import.meta.dirname)
 		await delay(2500);
 		console.log("Starting to log in");
 		await twitter.login();
-		// await bsky.login();
+		await bsky.login();
 
 		await delay(2500);
 
@@ -41,8 +43,8 @@ if (import.meta.dirname)
 			const path = await getPath(i),
 				text = `Frame ${i} of ${totalFrames} (${round((i / totalFrames) * 100, 2)}%) #FNAF2Movie #FNAF2 `;
 			await twitter.post(text, path);
-			// await bsky.post(text, path);
-			// await mastodon.post(text, path);
+			await bsky.post(text, path);
+			await mastodon.post(text, path);
 		};
 
 		const base_frames_path = `${process.cwd()}/frames/`;
