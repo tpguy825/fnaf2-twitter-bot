@@ -95,6 +95,7 @@ if (import.meta.dirname)
 		// }
 	});
 
+// bun bugged as hell
 process.stdin.on("data", (t) => {
 	if (t.equals(new Uint8Array([0x03]))) quit("Ctrl+C pressed");
 });
