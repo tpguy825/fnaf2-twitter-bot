@@ -18,21 +18,31 @@ const twitter = new TwitterProvider();
 const mastodon = new MastodonProvider();
 const bsky = new BlueskyProvider();
 
+export let quit: (reason: string) => void = () => process.exit();
+
 if (import.meta.dirname)
 	(async () => {
-		await initDB();
-		await twitter.init();
-		await mastodon.init();
-		await bsky.init();
+		try {
+			await initDB();
+			await twitter.init();
+			await mastodon.init();
+			await bsky.init();
+		} catch (e) {
+			quit("Failed to init");
+		}
 
-		window.quit = cleanup;
+		quit = cleanup;
 
 		const totalFrames = 31193;
 
 		await delay(2500);
 		console.log("Starting to log in");
-		await twitter.login();
-		await bsky.login();
+		try {
+			await twitter.login();
+			await bsky.login();
+		} catch (e) {
+			quit("Failed to log in");
+		}
 
 		await delay(2500);
 
@@ -88,7 +98,7 @@ if (import.meta.dirname)
 		function cleanup(why: string) {
 			console.log("Cleaning up, reason:", why);
 			if (interval) clearInterval(interval);
-			reportError(new Error("Cleaning up: " + why))
+			reportError(new Error("Cleaning up: " + why));
 			twitter.cleanup().catch(reportError);
 			return process.exit(0);
 		}
@@ -101,12 +111,12 @@ if (import.meta.dirname)
 
 // bun bugged as hell
 process.stdin.on("data", (t) => {
-	if (t.equals(new Uint8Array([0x03]))) window.quit("Ctrl+C pressed");
+	if (t.equals(new Uint8Array([0x03]))) quit("Ctrl+C pressed");
 });
 process.stdin.setRawMode(true);
 process.on("uncaughtException", (e) => {
 	reportError(e);
-})
+});
 process.on("unhandledRejection", (e) => {
-	reportError(new Error(String(e)))
-})
+	reportError(new Error(String(e)));
+});
