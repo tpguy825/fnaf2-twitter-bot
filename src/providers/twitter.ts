@@ -103,6 +103,7 @@ export class TwitterProvider implements Provider {
 	async post(text: string, imagePath: string, i = 0): Promise<void> {
 		if (!this.page || !this.browser)
 			throw new Error("Browser and page must be defined, did you call init before tweet?");
+		if (this.page.isClosed()) return window.quit("Chromium page closed, somethings gone horribly wrong...")
 		try {
 			await this.page.goto("https://twitter.com/compose/tweet");
 
@@ -148,6 +149,7 @@ export class TwitterProvider implements Provider {
 		} catch (e) {
 			// if (i < 3) return await this.post(text, imagePath, i++);
 			reportError(e as Error);
+			return;
 		}
 	}
 

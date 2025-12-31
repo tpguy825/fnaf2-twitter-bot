@@ -10,6 +10,10 @@ interface ReadonlyArray<T> {
 	includes(value: unknown): value is T;
 }
 
+interface Window {
+	quit: (why: string) => never;
+}
+
 interface Provider {
 	init(): Promise<unknown>;
 	login(): Promise<void>;

@@ -18,8 +18,6 @@ const twitter = new TwitterProvider();
 const mastodon = new MastodonProvider();
 const bsky = new BlueskyProvider();
 
-let quit: (reason: string) => void = () => process.exit();
-
 if (import.meta.dirname)
 	(async () => {
 		await initDB();
@@ -27,7 +25,7 @@ if (import.meta.dirname)
 		await mastodon.init();
 		await bsky.init();
 
-		quit = cleanup;
+		window.quit = cleanup;
 
 		const totalFrames = 31193;
 
@@ -41,7 +39,7 @@ if (import.meta.dirname)
 		const run = async (i: number) => {
 			if (i > totalFrames) throw new Error("Requesting too large frame");
 			const path = await getPath(i),
-				text = `Frame ${i} of ${totalFrames} (${round((i / totalFrames) * 100, 2)}%) #FNAF2Movie #FNAF2 `;
+				text = `Frame ${i} of ${totalFrames} (${round((i / totalFrames) * 100, 2)}%) #FNAF2Movie #FNAF2 #FNAF `;
 			await twitter.post(text, path);
 			await bsky.post(text, path);
 			await mastodon.post(text, path);
@@ -69,14 +67,19 @@ if (import.meta.dirname)
 		console.timeEnd("startup and tweet");
 		const interval = setInterval(
 			async () => {
-				console.time("run");
-				const current = await get();
-				await run(current);
-				await increment();
-				console.log(new Date());
-				console.timeEnd("run");
-				if (current >= totalFrames) {
-					cleanup("finished");
+				try {
+					console.time("run");
+					const current = await get();
+
+					await run(current);
+					await increment();
+					console.log(new Date());
+					console.timeEnd("run");
+					if (current >= totalFrames) {
+						cleanup("finished");
+					}
+				} catch (e) {
+					reportError(e as Error);
 				}
 			},
 			5 * 60 * 1000,
@@ -85,6 +88,7 @@ if (import.meta.dirname)
 		function cleanup(why: string) {
 			console.log("Cleaning up, reason:", why);
 			if (interval) clearInterval(interval);
+			reportError(new Error("Cleaning up: " + why))
 			twitter.cleanup().catch(reportError);
 			return process.exit(0);
 		}
@@ -97,6 +101,12 @@ if (import.meta.dirname)
 
 // bun bugged as hell
 process.stdin.on("data", (t) => {
-	if (t.equals(new Uint8Array([0x03]))) quit("Ctrl+C pressed");
+	if (t.equals(new Uint8Array([0x03]))) window.quit("Ctrl+C pressed");
 });
 process.stdin.setRawMode(true);
+process.on("uncaughtException", (e) => {
+	reportError(e);
+})
+process.on("unhandledRejection", (e) => {
+	reportError(new Error(String(e)))
+})
