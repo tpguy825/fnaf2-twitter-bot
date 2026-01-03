@@ -18,7 +18,10 @@ const twitter = new TwitterProvider();
 const mastodon = new MastodonProvider();
 const bsky = new BlueskyProvider();
 
-export let quit: (reason: string) => void = () => process.exit();
+export let quit: (reason: string) => never = (r) => {
+	console.error(r);
+	process.exit();
+};
 
 if (import.meta.dirname)
 	(async () => {
@@ -32,6 +35,7 @@ if (import.meta.dirname)
 		}
 
 		quit = cleanup;
+		let interval: null | NodeJS.Timeout = null;
 
 		const totalFrames = 31193;
 
@@ -75,7 +79,7 @@ if (import.meta.dirname)
 		await increment();
 
 		console.timeEnd("startup and tweet");
-		const interval = setInterval(
+		interval = setInterval(
 			async () => {
 				try {
 					console.time("run");

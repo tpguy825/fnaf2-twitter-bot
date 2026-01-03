@@ -103,10 +103,15 @@ export class TwitterProvider implements Provider {
 	async post(text: string, imagePath: string, i = 0): Promise<void> {
 		if (!this.page || !this.browser)
 			throw new Error("Browser and page must be defined, did you call init before tweet?");
-		if (this.page.isClosed()) return quit("Chromium page closed, somethings gone horribly wrong...")
+		if (this.page.isClosed()) return quit("Chromium page closed, somethings gone horribly wrong...");
 		try {
 			await this.page.goto("https://twitter.com/compose/tweet");
-
+		} catch (e) {
+			// this happens wayy too much
+			reportError(e);
+			return quit("chrome frame lost");
+		}
+		try {
 			const tweetBox = await this.page.waitForSelector(`div > div[class=""]`, { visible: true });
 			if (!tweetBox) {
 				throw new Error("Tweet box not found");
