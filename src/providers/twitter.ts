@@ -144,7 +144,7 @@ export class TwitterProvider implements Provider {
 						?.jsonValue()
 						.then((u) => console.log("Posted to Twitter:", u));
 				} catch (e) {
-					console.warn("Toast not found - not sure if tweet was sent");
+					reportError(new Error("Toast not found - not sure if tweet was sent"));
 				}
 			});
 
