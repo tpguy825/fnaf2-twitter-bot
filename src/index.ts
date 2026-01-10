@@ -23,95 +23,100 @@ export let quit: (reason: string) => never = (r) => {
 	process.exit();
 };
 
-if (import.meta.dirname)
-	(async () => {
+await mainrun();
+
+async function mainrun() {
+	if (import.meta.dirname) {
 		try {
-			await initDB();
-			await twitter.init();
-			await mastodon.init();
-			await bsky.init();
-		} catch (e) {
-			quit("Failed to init");
-		}
-
-		quit = cleanup;
-		let interval: null | NodeJS.Timeout = null;
-
-		const totalFrames = 31193;
-
-		await delay(2500);
-		console.log("Starting to log in");
-		try {
-			await twitter.login();
-			await bsky.login();
-		} catch (e) {
-			quit("Failed to log in");
-		}
-
-		await delay(2500);
-
-		const run = async (i: number) => {
-			if (i > totalFrames) throw new Error("Requesting too large frame");
-			const path = await getPath(i),
-				text = `Frame ${i} of ${totalFrames} (${round((i / totalFrames) * 100, 2)}%) #FNAF2Movie #FNAF2 #FNAF `;
-			await twitter.post(text, path);
-			await bsky.post(text, path);
-			await mastodon.post(text, path);
-		};
-
-		const base_frames_path = `${process.cwd()}/frames/`;
-
-		async function getPath(i: number) {
-			const filepath = join(base_frames_path, String(i).padStart(4, "0") + ".jpg");
-			if (fs.existsSync(filepath)) {
-				return filepath;
+			try {
+				await initDB();
+				await twitter.init();
+				await mastodon.init();
+				await bsky.init();
+			} catch (e) {
+				quit("Failed to init");
 			}
-			reportError(new Error("File doesn't exist: " + filepath));
-			return cleanup("file doesn't exist: " + filepath);
-		}
 
-		const current = await get();
+			quit = cleanup;
+			let interval: null | NodeJS.Timeout = null;
 
-		console.log("Starting at", current);
+			const totalFrames = 31193;
 
-		// initial run
-		await run(current);
-		await increment();
+			await delay(2500);
+			console.log("Starting to log in");
+			try {
+				await twitter.login();
+				await bsky.login();
+			} catch (e) {
+				quit("Failed to log in");
+			}
 
-		console.timeEnd("startup and tweet");
-		interval = setInterval(
-			async () => {
-				try {
-					console.time("run");
-					const current = await get();
+			await delay(2500);
 
-					await run(current);
-					await increment();
-					console.log(new Date());
-					console.timeEnd("run");
-					if (current >= totalFrames) {
-						cleanup("finished");
-					}
-				} catch (e) {
-					reportError(e as Error);
+			const run = async (i: number) => {
+				if (i > totalFrames) throw new Error("Requesting too large frame");
+				const path = await getPath(i),
+					text = `Frame ${i} of ${totalFrames} (${round((i / totalFrames) * 100, 2)}%) #FNAF2Movie #FNAF2 #FNAF `;
+				await twitter.post(text, path);
+				await bsky.post(text, path);
+				await mastodon.post(text, path);
+			};
+
+			const base_frames_path = `${process.cwd()}/frames/`;
+
+			async function getPath(i: number) {
+				const filepath = join(base_frames_path, String(i).padStart(4, "0") + ".jpg");
+				if (fs.existsSync(filepath)) {
+					return filepath;
 				}
-			},
-			5 * 60 * 1000,
-		);
+				reportError(new Error("File doesn't exist: " + filepath));
+				return cleanup("file doesn't exist: " + filepath);
+			}
 
-		function cleanup(why: string) {
-			console.log("Cleaning up, reason:", why);
-			if (interval) clearInterval(interval);
-			reportError(new Error("Cleaning up: " + why));
-			twitter.cleanup().catch(reportError);
-			return process.exit(0);
+			const current = await get();
+
+			console.log("Starting at", current);
+
+			// initial run
+			await run(current);
+			await increment();
+
+			console.timeEnd("startup and tweet");
+			interval = setInterval(
+				async () => {
+					try {
+						console.time("run");
+						const current = await get();
+
+						await run(current);
+						await increment();
+						console.log(new Date());
+						console.timeEnd("run");
+						if (current >= totalFrames) {
+							cleanup("finished");
+						}
+					} catch (e) {
+						reportError(e as Error);
+					}
+				},
+				5 * 60 * 1000,
+			);
+
+			function cleanup(why: string) {
+				console.log("Cleaning up, reason:", why);
+				if (interval) clearInterval(interval);
+				reportError(new Error("Cleaning up: " + why));
+				twitter.cleanup().catch(reportError);
+				return process.exit(0);
+			}
+		} catch (e) {
+			reportError(e as Error);
+			// if (twitter.browser) {
+			// 	twitter.browser.close().catch(reportError);
+			// }
 		}
-	})().catch((e) => {
-		reportError(e as Error);
-		// if (twitter.browser) {
-		// 	twitter.browser.close().catch(reportError);
-		// }
-	});
+	}
+}
 
 // bun bugged as hell
 process.stdin.on("data", (t) => {

@@ -68,7 +68,7 @@ export class TwitterProvider implements Provider {
 				}),
 			);
 		await this.browser.setCookie(...cookies);
-		await this.page.goto("https://x.com/compose/tweet");
+		// await this.page.goto("https://x.com/compose/tweet");
 	}
 
 	/** @deprecated might explode */
@@ -109,7 +109,22 @@ export class TwitterProvider implements Provider {
 		} catch (e) {
 			// this happens wayy too much
 			reportError(e);
-			return quit("chrome frame lost");
+
+			// utter bollocks solution that probably will cause more issues
+			// discord style solution
+			reportError(new Error("Chromium issue, restarting chromium"))
+			try {
+				await this.cleanup();
+			} catch (e) {}
+			try {
+				await this.init();
+				await this.login();
+				return await this.post(text, imagePath);
+			} catch (e) {
+				reportError(e);
+				return quit("restart chromium failed")
+			}
+			// return quit("chrome frame lost");
 		}
 		try {
 			const tweetBox = await this.page.waitForSelector(`div > div[class=""]`, { visible: true });

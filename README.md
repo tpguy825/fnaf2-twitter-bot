@@ -100,6 +100,11 @@ ffmpeg -i fnaf2.mkv -map 0:2 -c copy fnaf2.srt
 
 And then convert to frames:
 
+<!--
+	todo this has shit visual quality???? for decent quality do ffmpeg -> png -> magick convert -> jpeg
+	the reason for using jpeg is because bsky has 1mb file limit and some pngs are like 1.4mb
+ -->
+
 ```bash
 # for more subtitle options: https://trac.ffmpeg.org/wiki/HowToBurnSubtitlesIntoVideo
 mkdir frames
