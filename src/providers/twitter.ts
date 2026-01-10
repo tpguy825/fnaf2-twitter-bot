@@ -160,6 +160,8 @@ export class TwitterProvider implements Provider {
 						.then((u) => console.log("Posted to Twitter:", u));
 				} catch (e) {
 					reportError(new Error("Toast not found - not sure if tweet was sent"));
+					// try it again lmao
+					await this.page.click(`button[type="button"][data-testid="tweetButton"]`);
 				}
 			});
 
