@@ -155,11 +155,12 @@ export class TwitterProvider implements Provider {
 				console.log("Clicked tweet button");
 
 				try {
-					const url = (
-						await (await this.page.waitForSelector('[data-testid="toast"] a'))?.getProperty("href")
-					)?.jsonValue();
+					const url = await this.page
+						.waitForSelector('[data-testid="toast"] a')
+						.then((t) => t?.getProperty("href"))
+						.then((t) => t?.jsonValue());
 					if (!url) throw url;
-					appendFileSync("posts.txt", "twitter;" + framenum + ";" + url + "\n")
+					appendFileSync("posts.txt", "twitter;" + framenum + ";" + url + "\n");
 					return url;
 				} catch (e) {
 					reportError(new Error("Toast not found - not sure if tweet was sent"));
