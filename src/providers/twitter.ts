@@ -3,7 +3,7 @@ import fs from "fs/promises";
 import puppeteer, { Browser, type CookieData, ElementHandle, Page } from "puppeteer";
 import { delay, quit } from "..";
 import path from "path";
-import { existsSync } from "fs";
+import { appendFileSync, existsSync } from "fs";
 
 const headless = false;
 
@@ -100,7 +100,7 @@ export class TwitterProvider implements Provider {
 		if (loginManually) await this.page.waitForNavigation();
 	}
 
-	async post(text: string, imagePath: string, i = 0): Promise<void> {
+	async post(text: string, imagePath: string, framenum: number): Promise<string> {
 		if (!this.page || !this.browser)
 			throw new Error("Browser and page must be defined, did you call init before tweet?");
 		if (this.page.isClosed()) return quit("Chromium page closed, somethings gone horribly wrong...");
@@ -112,17 +112,17 @@ export class TwitterProvider implements Provider {
 
 			// utter bollocks solution that probably will cause more issues
 			// discord style solution
-			reportError(new Error("Chromium issue, restarting chromium"))
+			reportError(new Error("Chromium issue, restarting chromium"));
 			try {
 				await this.cleanup();
 			} catch (e) {}
 			try {
 				await this.init();
 				await this.login();
-				return await this.post(text, imagePath);
+				return await this.post(text, imagePath, framenum);
 			} catch (e) {
 				reportError(e);
-				return quit("restart chromium failed")
+				return quit("restart chromium failed");
 			}
 			// return quit("chrome frame lost");
 		}
@@ -155,23 +155,27 @@ export class TwitterProvider implements Provider {
 				console.log("Clicked tweet button");
 
 				try {
-					(await (await this.page.waitForSelector('[data-testid="toast"] a'))?.getProperty("href"))
-						?.jsonValue()
-						.then((u) => console.log("Posted to Twitter:", u));
+					const url = (
+						await (await this.page.waitForSelector('[data-testid="toast"] a'))?.getProperty("href")
+					)?.jsonValue();
+					if (!url) throw url;
+					appendFileSync("posts.txt", "twitter;" + framenum + ";" + url + "\n")
+					return url;
 				} catch (e) {
 					reportError(new Error("Toast not found - not sure if tweet was sent"));
 					// try it again lmao
 					await this.page.click(`button[type="button"][data-testid="tweetButton"]`);
 				}
+				return "[error]";
 			});
 
 			await this.page.click(`button[aria-label="Add photos or video"][type="button"]`);
 			console.log("Clicked image button");
-			await waiting;
+			return await waiting;
 		} catch (e) {
 			// if (i < 3) return await this.post(text, imagePath, i++);
 			reportError(e as Error);
-			return;
+			return "[error]";
 		}
 	}
 

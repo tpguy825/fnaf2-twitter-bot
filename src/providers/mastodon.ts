@@ -2,6 +2,7 @@
 import { createRestAPIClient } from "masto";
 import type { Client } from "masto/mastodon/rest/client.js";
 import { reportError } from "../hidden";
+import { appendFileSync } from "fs";
 
 export class MastodonProvider implements Provider {
 	masto: Client | null = null;
@@ -18,7 +19,7 @@ export class MastodonProvider implements Provider {
 	login(): Promise<void> {
 		throw new Error("Method not implemented.");
 	}
-	async post(text: string, imagePath: string, i = 0): Promise<void> {
+	async post(text: string, imagePath: string, framenum: number): Promise<string> {
 		if (!this.masto) throw new Error("Mastodon not initialized, did you call init before posting?");
 		try {
 			console.log("Attempting to post on Mastadon");
@@ -35,12 +36,15 @@ export class MastodonProvider implements Provider {
 				visibility: "public",
 				mediaIds: [attachment1.id],
 			});
+			if (!status.url) throw new Error("No URL returned");
 			console.log("Posted to mastodon:", status.url);
+			appendFileSync("posts.txt", "mastodon;" + framenum + ";" + status.url + "\n");
 
-			return;
+			return status.url;
 		} catch (e) {
 			// if (i < 3) return await this.post(text, imagePath, i+1);
 			reportError(e as Error);
+			return "[error]";
 		}
 	}
 	cleanup?(): Promise<void> {

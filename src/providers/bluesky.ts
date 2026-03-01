@@ -1,4 +1,5 @@
 /// <reference path="../../types.d.ts" />
+import { appendFileSync } from "fs";
 import { reportError } from "../hidden";
 import {
 	type $Typed,
@@ -27,7 +28,7 @@ export class BlueskyProvider implements Provider {
 			password: process.env.BSKY_PASSWORD,
 		});
 	}
-	async post(text: string, imagePath: string, i = 0): Promise<void> {
+	async post(text: string, imagePath: string, framenum:number): Promise<string> {
 		if (!this.agent || !this.session)
 			throw new Error("Bluesky not initialized, did you call init before posting?");
 		try {
@@ -40,17 +41,22 @@ export class BlueskyProvider implements Provider {
 
 			const postData = await buildPost(this.agent, text, buildImageEmbed(blob.data.blob, 1920, 956));
 			const resp = await this.agent.post(postData);
-			if (resp.cid)
-				return console.log(
+			if (resp.cid) {
+				console.log(
 					"Posted to Bluesky: https://bsky.app/profile/fnaf2-frames.bsky.social/post/" +
 						resp.uri.split("/").pop(),
 				);
-			else throw resp;
+				appendFileSync("posts.txt", "bsky;"+framenum +";https://bsky.app/profile/fnaf2-frames.bsky.social/post/" +
+					resp.uri.split("/").pop() + "\n");
+				return "https://bsky.app/profile/fnaf2-frames.bsky.social/post/" + resp.uri.split("/").pop();
+			} else throw resp;
 		} catch (e) {
 			// if (i < 3) return await this.post(text, imagePath, i + 1);
 			reportError(e as Error);
+			return "[error]"
 		}
 	}
+	/** @deprecated */
 	cleanup?(): Promise<void> {
 		throw new Error("Method not implemented.");
 	}

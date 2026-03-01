@@ -53,16 +53,18 @@ async function mainrun() {
 
 			await delay(2500);
 
+			const base_frames_path = `${process.cwd()}/frames/`;
+
 			const run = async (i: number) => {
 				if (i > totalFrames) throw new Error("Requesting too large frame");
 				const path = await getPath(i),
 					text = `Frame ${i} of ${totalFrames} (${round((i / totalFrames) * 100, 2)}%) #FNAF2Movie #FNAF2 #FNAF `;
-				await twitter.post(text, path);
-				await bsky.post(text, path);
-				await mastodon.post(text, path);
+				// TODO something in future?
+				const turl = await twitter.post(text, path, i);
+				const burl = await bsky.post(text, path, i);
+				const murl = await mastodon.post(text, path, i);
 			};
 
-			const base_frames_path = `${process.cwd()}/frames/`;
 
 			async function getPath(i: number) {
 				const filepath = join(base_frames_path, String(i).padStart(4, "0") + ".jpg");

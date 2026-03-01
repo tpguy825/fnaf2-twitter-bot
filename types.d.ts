@@ -13,6 +13,6 @@ interface ReadonlyArray<T> {
 interface Provider {
 	init(): Promise<unknown>;
 	login(): Promise<void>;
-	post(text: string, imagePath: string, i?: number): Promise<void>;
+	post(text: string, imagePath: string, i?: number): Promise<string>;
 	cleanup?(): Promise<void>;
 }
