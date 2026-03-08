@@ -8,7 +8,7 @@
 	},
 	"dependencies": {
 		"@atproto/api": "^0.18.8",
-		"masto": "^7.10.0",
+		"masto": "^7.10.2",
 		"puppeteer": "^24.34.0"
 	},
 	"scripts": {
